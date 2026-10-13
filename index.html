@@ -282,7 +282,7 @@ function showTab(name){ if(!TABS.includes(name)) name="evenements";
   try{ localStorage.setItem("loub-tab",name);}catch(e){}
 }
 TABS.forEach(t=>$("#tab-"+t).addEventListener("click",()=>showTab(t)));
-showTab((location.hash||"").slice(1) || (()=>{try{return localStorage.getItem("loub-tab")}catch(e){return null}})());
+showTab((location.hash||"").slice(1) || "evenements");
 
 /* ---------- Filtres & selects ---------- */
 function buildChips(box, key){
