@@ -141,6 +141,7 @@ textarea{min-height:70px;resize:vertical}
 .modal p{margin:0;color:var(--muted);overflow-wrap:anywhere}
 .btn.danger{background:var(--no)}
 .catsel{width:auto;padding:5px 8px;font-size:13px;font-weight:700}
+.sitefoot{padding-block:0 40px;text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;max-width:calc(100% - 32px);z-index:10}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
 </style>
@@ -164,6 +165,7 @@ textarea{min-height:70px;resize:vertical}
 </header>
 
 <main class="wrap">
+  <div id="offNotice" class="notice" hidden>Le site n'est pas encore relié à Supabase : les idées et votes restent sur cet appareil. Colle l'URL et la clé du projet en haut du script de index.html.</div>
   <div id="roNotice" class="notice" hidden>Tu peux tout consulter, mais pas encore proposer ni voter. Demande au BDE de t'inviter sur cette page.</div>
 
   <!-- ÉVÉNEMENTS -->
@@ -224,6 +226,18 @@ textarea{min-height:70px;resize:vertical}
     <div id="calDetail"></div>
   </section>
 </main>
+<footer class="wrap sitefoot"><button type="button" class="linkbtn" id="bdeBtn">Connexion BDE</button></footer>
+<div class="modal-bg" id="loginBg" hidden>
+  <form class="modal" id="loginForm" aria-labelledby="loginTitle">
+    <h3 id="loginTitle">Connexion BDE</h3>
+    <p>Réservé aux membres du bureau, pour gérer les événements et les idées.</p>
+    <label>E-mail<input id="loginEmail" type="email" required autocomplete="email"></label>
+    <label>Mot de passe<input id="loginPass" type="password" required autocomplete="current-password"></label>
+    <p id="loginErr" style="color:var(--no);font-weight:700" hidden>E-mail ou mot de passe incorrect.</p>
+    <div class="formfoot"><button type="button" class="btn ghost" id="loginCancel">Annuler</button><button class="btn" type="submit" id="loginSubmit">Se connecter</button></div>
+  </form>
+</div>
+
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="modal-bg" id="confirmBg" hidden>
   <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText">
@@ -233,7 +247,16 @@ textarea{min-height:70px;resize:vertical}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
 <script>
+/* =====================================================================
+   CONNEXION SUPABASE : colle ici les 2 infos de ton projet
+   (Supabase → Project Settings → API)
+   ===================================================================== */
+const SUPABASE_URL = "https://dcgcckgmuyipklpukacn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Tmmc30sVRIJsPHkVPGew7g_LX3N5kAA";
+/* ===================================================================== */
+
 const CATS = [
   {id:"sport", label:"Sport", c:"var(--cat-sport)"},
   {id:"soiree", label:"Soirée", c:"var(--cat-soiree)"},
@@ -481,23 +504,26 @@ function applyPerms(){
   render(true);
 }
 
-/* ---------- Version téléchargée : données intégrées + sauvegarde locale ---------- */
-const SNAPSHOT = {"ideas": {"prog-04": {"author": "bde", "category": "soiree", "createdAt": 1791898306261, "date": "", "desc": "", "finalDate": "2026-12-31", "source": "presentation-rentree", "status": "validated", "title": "Jour de l'An"}, "prog-05": {"author": "bde", "category": "isg", "createdAt": 1791898306260, "date": "", "desc": "", "finalDate": "2027-01-13", "source": "presentation-rentree", "status": "validated", "title": "Épiphanie"}, "prog-06": {"author": "bde", "category": "isg", "createdAt": 1791898306259, "date": "", "desc": "", "finalDate": "2027-02-05", "source": "presentation-rentree", "status": "validated", "title": "Chandeleur"}, "prog-08": {"author": "bde", "category": "soiree", "createdAt": 1791898306257, "date": "", "desc": "", "finalDate": "2027-06-21", "source": "presentation-rentree", "status": "validated", "title": "Fête de la Musique"}, "prog-09": {"author": "bde", "category": "sport", "createdAt": 1791898306256, "date": "", "desc": "Le retour de l'événement surprise. Édition 1 : 26 loubards, 40 L de bière, 6 km, 3 bars.", "source": "presentation-rentree", "status": "open", "title": "Loubard'Race 2"}, "prog-10": {"author": "bde", "category": "sport", "createdAt": 1791898306255, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Karting géant"}, "prog-11": {"author": "bde", "category": "sport", "createdAt": 1791898306254, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi de volley"}, "prog-12": {"author": "bde", "category": "sport", "createdAt": 1791898306253, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Basket"}, "prog-13": {"author": "bde", "category": "sport", "createdAt": 1791898306252, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Five"}, "prog-14": {"author": "bde", "category": "sport", "createdAt": 1791898306251, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Natation"}, "prog-15": {"author": "bde", "category": "sport", "createdAt": 1791898306250, "date": "", "desc": "Dirigée par Lau et Pau.", "source": "presentation-rentree", "status": "open", "title": "Séance Pilates"}, "prog-16": {"author": "bde", "category": "sport", "createdAt": 1791898306249, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi de pétanque"}, "prog-17": {"author": "bde", "category": "sport", "createdAt": 1791898306248, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi Pierre-Feuille-Ciseaux"}, "prog-18": {"author": "bde", "category": "sport", "createdAt": 1791898306247, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Journée Pierre-Feuille-Ciseaux"}, "prog-19": {"author": "bde", "category": "sport", "createdAt": 1791898306246, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Journée Paintball"}, "prog-20": {"author": "bde", "category": "sport", "createdAt": 1791898306245, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Les Olympiades"}, "prog-21": {"author": "bde", "category": "autres", "createdAt": 1791898306244, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Parc d'attractions"}, "prog-22": {"author": "bde", "category": "autres", "createdAt": 1791898306243, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Parc aquatique"}, "prog-23": {"author": "bde", "category": "autres", "createdAt": 1791898306242, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Jump XL / Bowling"}, "prog-24": {"author": "bde", "category": "autres", "createdAt": 1791898306241, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Accrobranche"}, "prog-25": {"author": "bde", "category": "autres", "createdAt": 1791898306240, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Tournoi jeux vidéo"}}, "events": {"60f6tpug5lztzx41173q": {"author": "bde", "category": "soiree", "createdAt": 1791899404142, "date": "2026-12-31", "desc": "", "fromIdea": "prog-04", "place": "", "time": "", "title": "Jour de l'An"}, "hcof2mnjr784v2cfp898": {"author": "bde", "category": "isg", "createdAt": 1791899673248, "date": "2027-02-05", "desc": "", "fromIdea": "prog-06", "place": "", "time": "", "title": "Chandeleur"}, "xd954fzl2fafppjedl6h": {"author": "bde", "category": "soiree", "createdAt": 1791899708168, "date": "2027-06-21", "desc": "", "fromIdea": "prog-08", "place": "", "time": "", "title": "Fête de la Musique"}, "z7m6nqlonk6es8zz7pf8": {"author": "bde", "category": "isg", "createdAt": 1791899500737, "date": "2027-01-13", "desc": "", "fromIdea": "prog-05", "place": "", "time": "", "title": "Épiphanie"}}, "votes": {"u_nc1lLwlk6xFObkBu9LKi3Q": {"v": {}}}};
+
+/* ---------- Secours si Supabase n'est pas configuré : données intégrées ---------- */
+const SNAPSHOT = {"ideas": {"prog-04": {"author": "bde", "category": "soiree", "createdAt": 1791898306261, "date": "", "desc": "", "finalDate": "2026-12-31", "source": "presentation-rentree", "status": "validated", "title": "Jour de l'An"}, "prog-05": {"author": "bde", "category": "isg", "createdAt": 1791898306260, "date": "", "desc": "", "finalDate": "2027-01-13", "source": "presentation-rentree", "status": "validated", "title": "Épiphanie"}, "prog-06": {"author": "bde", "category": "isg", "createdAt": 1791898306259, "date": "", "desc": "", "finalDate": "2027-02-05", "source": "presentation-rentree", "status": "validated", "title": "Chandeleur"}, "prog-08": {"author": "bde", "category": "soiree", "createdAt": 1791898306257, "date": "", "desc": "", "finalDate": "2027-06-21", "source": "presentation-rentree", "status": "validated", "title": "Fête de la Musique"}, "prog-09": {"author": "bde", "category": "sport", "createdAt": 1791898306256, "date": "", "desc": "Le retour de l'événement surprise. Édition 1 : 26 loubards, 40 L de bière, 6 km, 3 bars.", "source": "presentation-rentree", "status": "open", "title": "Loubard'Race 2"}, "prog-10": {"author": "bde", "category": "sport", "createdAt": 1791898306255, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Karting géant"}, "prog-11": {"author": "bde", "category": "sport", "createdAt": 1791898306254, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi de volley"}, "prog-12": {"author": "bde", "category": "sport", "createdAt": 1791898306253, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Basket"}, "prog-13": {"author": "bde", "category": "sport", "createdAt": 1791898306252, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Five"}, "prog-14": {"author": "bde", "category": "sport", "createdAt": 1791898306251, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Natation"}, "prog-15": {"author": "bde", "category": "sport", "createdAt": 1791898306250, "date": "", "desc": "Dirigée par Lau et Pau.", "source": "presentation-rentree", "status": "open", "title": "Séance Pilates"}, "prog-16": {"author": "bde", "category": "sport", "createdAt": 1791898306249, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi de pétanque"}, "prog-17": {"author": "bde", "category": "sport", "createdAt": 1791898306248, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Tournoi Pierre-Feuille-Ciseaux"}, "prog-18": {"author": "bde", "category": "sport", "createdAt": 1791898306247, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Journée Pierre-Feuille-Ciseaux"}, "prog-19": {"author": "bde", "category": "sport", "createdAt": 1791898306246, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Journée Paintball"}, "prog-20": {"author": "bde", "category": "sport", "createdAt": 1791898306245, "date": "", "desc": "", "source": "presentation-rentree", "status": "open", "title": "Les Olympiades"}, "prog-21": {"author": "bde", "category": "autres", "createdAt": 1791898306244, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Parc d'attractions"}, "prog-22": {"author": "bde", "category": "autres", "createdAt": 1791898306243, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Parc aquatique"}, "prog-23": {"author": "bde", "category": "autres", "createdAt": 1791898306242, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Jump XL / Bowling"}, "prog-24": {"author": "bde", "category": "autres", "createdAt": 1791898306241, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Accrobranche"}, "prog-25": {"author": "bde", "category": "autres", "createdAt": 1791898306240, "date": "", "desc": "Culture & sorties", "source": "presentation-rentree", "status": "open", "title": "Tournoi jeux vidéo"}}, "events": {"60f6tpug5lztzx41173q": {"author": "bde", "category": "soiree", "createdAt": 1791899404142, "date": "2026-12-31", "desc": "", "fromIdea": "prog-04", "place": "", "time": "", "title": "Jour de l'An"}, "hcof2mnjr784v2cfp898": {"author": "bde", "category": "isg", "createdAt": 1791899673248, "date": "2027-02-05", "desc": "", "fromIdea": "prog-06", "place": "", "time": "", "title": "Chandeleur"}, "xd954fzl2fafppjedl6h": {"author": "bde", "category": "soiree", "createdAt": 1791899708168, "date": "2027-06-21", "desc": "", "fromIdea": "prog-08", "place": "", "time": "", "title": "Fête de la Musique"}, "z7m6nqlonk6es8zz7pf8": {"author": "bde", "category": "isg", "createdAt": 1791899500737, "date": "2027-01-13", "desc": "", "fromIdea": "prog-05", "place": "", "time": "", "title": "Épiphanie"}}};
 function makeLocalDb(){
   const KEY="loubardise-data";
   let data; try{ data=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ data=null; }
-  if(!data) data={ideas:{...SNAPSHOT.ideas},events:{...SNAPSHOT.events},votes:{...SNAPSHOT.votes}};
+  if(!data) data={ideas:{...SNAPSHOT.ideas},events:{...SNAPSHOT.events},votes:{}};
   const subs={ideas:[],events:[],votes:[]};
   const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(e){} };
-  const snapOf=c=>({docs:Object.entries(data[c]).map(([id,v])=>({id,exists:true,data:()=>v}))});
+  const snapOf=c=>({docs:Object.entries(data[c]).map(([id,v])=>({id,data:()=>v}))});
   const emit=c=>{ save(); subs[c].forEach(fn=>fn(snapOf(c))); };
   const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-  const doc=path=>{ const [c,id]=path.split("/"); return {
-    set:async v=>{ data[c][id]=structuredClone(v); emit(c); },
-    update:async v=>{ data[c][id]={...(data[c][id]||{}),...v}; emit(c); },
-    delete:async()=>{ delete data[c][id]; emit(c); } }; };
-  return { doc, collection:c=>({ add:async v=>{ const id=uid(); data[c][id]=structuredClone(v); emit(c); return {id}; },
-    onSnapshot:fn=>{ subs[c].push(fn); setTimeout(()=>fn(snapOf(c)),0); return ()=>{}; } }) };
+  return {
+    doc(path){ const [c,id]=path.split("/"); return {
+      set:async v=>{ data[c][id]=structuredClone(v); emit(c); },
+      update:async v=>{ data[c][id]={...(data[c][id]||{}),...v}; emit(c); },
+      delete:async()=>{ delete data[c][id]; emit(c); } }; },
+    collection(c){ return { add:async v=>{ const id=uid(); data[c][id]=structuredClone(v); emit(c); return {id}; },
+      onSnapshot:fn=>{ subs[c].push(fn); setTimeout(()=>fn(snapOf(c)),0); return ()=>{}; } }; }
+  };
 }
 function startOffline(){
   db=makeLocalDb(); state.me="local"; state.canWrite=true; state.canAdmin=true;
@@ -507,21 +533,91 @@ function startOffline(){
   db.collection("votes").onSnapshot(s=>{ const v={}; for(const d of s.docs) v[d.id]=d.data(); state.votes=v; if(!state._v){state._v=1;ready();} else render(true); });
 }
 
-/* ---------- Connexion aux données partagées ---------- */
+/* ---------- Supabase : même interface que le reste de la page ---------- */
+const sbConfigured = () => /^https:\/\/[a-z0-9-]+\.supabase\.co/i.test(SUPABASE_URL.trim()) && SUPABASE_KEY.trim().length > 40;
+let sb = null;
+const IDEA_MAP  = {title:"title",category:"category",date:"date",desc:"descr",authorName:"author_name",status:"status",finalDate:"final_date"};
+const EVENT_MAP = {title:"title",category:"category",date:"date",time:"time",place:"place",desc:"descr",fromIdea:"from_idea"};
+const NULLABLE = new Set(["date","final_date","from_idea"]);
+function toRow(map,obj){ const r={}; for(const [k,col] of Object.entries(map)) if(k in obj){ let v=obj[k]; if(NULLABLE.has(col)&&!v) v=null; r[col]=v; } return r; }
+const fromIdea  = r=>({title:r.title,category:r.category,date:r.date||"",desc:r.descr||"",authorName:r.author_name||"",status:r.status||"open",finalDate:r.final_date||"",createdAt:Date.parse(r.created_at)||0});
+const fromEvent = r=>({title:r.title,category:r.category,date:r.date||"",time:r.time||"",place:r.place||"",desc:r.descr||"",fromIdea:r.from_idea||"",createdAt:Date.parse(r.created_at)||0});
+const TABLES = {ideas:{map:IDEA_MAP,from:fromIdea}, events:{map:EVENT_MAP,from:fromEvent}};
+function sbErr(error){ return {code: (error.code==="42501"||/row-level security|permission/i.test(error.message||"")) ? "invalid_argument" : "unavailable", message:error.message}; }
+function deviceId(){
+  try{ let id=localStorage.getItem("loub-device"); if(!id){ id="d-"+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem("loub-device",id); } return id; }
+  catch(e){ return "d-"+Math.random().toString(36).slice(2); }
+}
+function makeSupabaseDb(){
+  const subs={ideas:[],events:[],votes:[]}, cache={ideas:[],events:[],votes:[]};
+  const notify=c=>{
+    let docs;
+    if(c==="votes"){ const g={}; for(const r of cache.votes){ (g[r.voter]=g[r.voter]||{v:{}}).v[r.idea_id] = r.choice==="alt" ? {c:"alt",d:r.alt_date} : {c:r.choice}; }
+      docs=Object.entries(g).map(([id,v])=>({id,data:()=>v})); }
+    else docs=cache[c].map(r=>{ const o=TABLES[c].from(r); return {id:r.id,data:()=>o}; });
+    subs[c].forEach(fn=>fn({docs}));
+  };
+  const fetchTable=async c=>{ const {data,error}=await sb.from(c).select("*"); if(error) throw sbErr(error); cache[c]=data||[]; notify(c); };
+  const timers={}; const refetch=c=>{ clearTimeout(timers[c]); timers[c]=setTimeout(()=>fetchTable(c).catch(()=>{}),150); };
+  sb.channel("loubardise").on("postgres_changes",{event:"*",schema:"public"},p=>{ if(subs[p.table]) refetch(p.table); }).subscribe();
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) ["ideas","events","votes"].forEach(refetch); });
+  setInterval(()=>{ if(!document.hidden) ["ideas","events","votes"].forEach(refetch); }, 60000);
+  const mustChange=(data,error)=>{ if(error) throw sbErr(error); if(!data||!data.length) throw {code:"invalid_argument",message:"aucune ligne modifiée"}; };
+  return {
+    doc(path){ const [c,id]=path.split("/"); return {
+      async set(v){ // seulement utilisé pour les votes : votes/<appareil>
+        const {error:e1}=await sb.from("votes").delete().eq("voter",id); if(e1) throw sbErr(e1);
+        const rows=Object.entries(v.v||{}).map(([idea_id,x])=>({idea_id,voter:id,choice:x.c,alt_date:x.c==="alt"?(x.d||null):null}));
+        if(rows.length){ const {error}=await sb.from("votes").insert(rows); if(error) throw sbErr(error); }
+        await fetchTable("votes");
+      },
+      async update(v){ const {data,error}=await sb.from(c).update(toRow(TABLES[c].map,v)).eq("id",id).select("id"); mustChange(data,error); await fetchTable(c); },
+      async delete(){ const {data,error}=await sb.from(c).delete().eq("id",id).select("id"); mustChange(data,error); await fetchTable(c); if(c==="ideas") await fetchTable("votes"); }
+    }; },
+    collection(c){ return {
+      async add(v){ const {data,error}=await sb.from(c).insert(toRow(TABLES[c].map,v)).select("id").single(); if(error) throw sbErr(error); await fetchTable(c); return {id:data.id}; },
+      onSnapshot(fn){ subs[c].push(fn); fetchTable(c).catch(e=>{ console.error(e); toast("Impossible de charger les données. Vérifie la connexion Supabase."); fn({docs:[]}); }); return ()=>{}; }
+    }; }
+  };
+}
+
+/* ---------- Connexion BDE (comptes créés dans Supabase → Authentication) ---------- */
+async function refreshAuth(){
+  const {data}=await sb.auth.getSession(); const s=data?.session;
+  state.canAdmin=!!s;
+  $("#bdeBtn").textContent = s ? "Déconnexion BDE ("+(s.user?.email||"")+")" : "Connexion BDE";
+  applyPerms(); render(true);
+}
+function openLogin(){
+  if(state.canAdmin){ sb.auth.signOut().then(()=>toast("Déconnecté.")); return; }
+  $("#loginBg").hidden=false; $("#loginErr").hidden=true; $("#loginEmail").focus();
+}
+$("#bdeBtn").onclick=openLogin;
+$("#loginCancel").onclick=()=>{ $("#loginBg").hidden=true; };
+$("#loginBg").addEventListener("click",e=>{ if(e.target.id==="loginBg") $("#loginBg").hidden=true; });
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault(); const btn=$("#loginSubmit"); btn.disabled=true;
+  const {error}=await sb.auth.signInWithPassword({email:$("#loginEmail").value.trim(),password:$("#loginPass").value});
+  btn.disabled=false;
+  if(error){ $("#loginErr").hidden=false; return; }
+  $("#loginBg").hidden=true; $("#loginForm").reset(); toast("Connecté en tant que BDE.");
+});
+
+/* ---------- Démarrage ---------- */
 (async()=>{
-  if(!window.claude?.use){ startOffline(); return; }
-  [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
-  if(user){
-    state.me=await user.id();
-    const [cw,ce]=await Promise.all([user.can("data.write"),user.canEdit()]);
-    state.canWrite = cw!==false; state.canAdmin = !!ce;
-  } else { state.canWrite=false; }
-  if(!db){ state.dbReady=true; state.canWrite=false; applyPerms(); return; }
-  const errCb=()=>{};
-  let got=0; const ready=()=>{ if(++got>=3){ state.dbReady=true; applyPerms(); } else render(true); };
-  db.collection("events").onSnapshot(s=>{ state.events=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.date&&e.title); if(!state._e){state._e=1;ready();} else render(); }, errCb);
-  db.collection("ideas").onSnapshot(s=>{ state.ideas=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.title); if(!state._i){state._i=1;ready();} else render(); }, errCb);
-  db.collection("votes").onSnapshot(s=>{ const v={}; for(const d of s.docs) v[d.id]=d.data(); state.votes=v; if(!state._v){state._v=1;ready();} else render(true); }, errCb);
+  if(!sbConfigured() || !window.supabase){
+    // Pas encore connecté à Supabase : on affiche les données intégrées, sauvegarde locale seulement
+    $("#offNotice").hidden=false; $("#bdeBtn").hidden=true;
+    startOffline(); return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL.trim().replace(/\/(rest\/v1\/?)?$/,""), SUPABASE_KEY.trim());
+  db = makeSupabaseDb(); state.me = deviceId(); state.canWrite = true;
+  sb.auth.onAuthStateChange(()=>{ refreshAuth(); });
+  await refreshAuth();
+  let got=0; const ready=()=>{ if(++got>=3){ state.dbReady=true; applyPerms(); } };
+  db.collection("events").onSnapshot(s=>{ state.events=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.date&&e.title); if(!state._e){state._e=1;ready();} else render(); });
+  db.collection("ideas").onSnapshot(s=>{ state.ideas=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.title); if(!state._i){state._i=1;ready();} else render(); });
+  db.collection("votes").onSnapshot(s=>{ const v={}; for(const d of s.docs) v[d.id]=d.data(); state.votes=v; if(!state._v){state._v=1;ready();} else render(true); });
 })();
 render(true);
 </script>
